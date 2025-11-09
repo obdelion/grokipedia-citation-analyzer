@@ -10,6 +10,8 @@ Example:
     python citation_verifier.py https://grokipedia.com/page/Elon_Musk
 
 The script will output the citation sources for each citation and show how many unique sources underpin them.
+
+If no URL is provided as a command-line argument, the script will prompt you to enter the URL interactively.
 """
 
 import sys
@@ -43,8 +45,7 @@ def extract_citation_links(article_url):
             citation_refs.append(links)
         else:
             citation_refs.append([urljoin(article_url, href)])
-
-    # Fallback: if no <sup> citations were found, collect all external links
+    # Fallback: if no citations were found, collect all external links
     if not citation_refs:
         links = []
         for link in soup.find_all('a', href=True):
@@ -52,7 +53,6 @@ def extract_citation_links(article_url):
             if full_url.startswith('http'):
                 links.append(full_url)
         citation_refs = [[url] for url in links]
-
     return citation_refs
 
 
@@ -75,10 +75,14 @@ def analyze_dependencies(citation_refs):
 
 
 def main():
+    # Determine article URL from CLI argument or interactive input
     if len(sys.argv) < 2:
-        print("Usage: python citation_verifier.py <Grokipedia article URL>")
-        sys.exit(1)
-    article_url = sys.argv[1]
+        article_url = input("Enter the Grokipedia article URL: ").strip()
+        if not article_url:
+            print("No URL provided. Exiting.")
+            sys.exit(1)
+    else:
+        article_url = sys.argv[1]
     citation_refs = extract_citation_links(article_url)
     citation_sources, domain_to_citations = analyze_dependencies(citation_refs)
     print("Citation sources by citation number:")
